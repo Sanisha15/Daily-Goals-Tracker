@@ -1,0 +1,16 @@
+{
+    "manifest_version": 3,
+    "name": "Daily Goals Tracker",
+    "version": "1.0",
+    "description": "Set and track your daily goals with this Chrome extension.",
+    "action": {
+      "default_popup": "index.html",
+      "default_icon": {
+        "16": "mediaa/icon.png",
+        "48": "mediaa/icon.png",
+        "128": "mediaa/icon.png"
+      }
+    },
+    "permissions": ["storage"]
+  }
+  
