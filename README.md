@@ -1,26 +1,19 @@
 # Daily-Goals-Tracker
 This is a Chrome extension designed to help user set and track their daily goals. Stay focused and motivated with this handy tool.
 
-**Features**:
-The "Daily Goals Tracker" extension offers the following features:
+Key Features:
 
-* **Goal Tracking**:
-Users can enter their daily goals using an input field and add them to the list.
-Goals are displayed as a list on extension's popup page.
+1. Goal Input & Tracking: Easily add your daily goals using the input field. After typing your daily goal using the input field, simply press the "Add Goals" button to include it in your list. Your goal will then appear instantly on the extension's popup page.
 
-* **Storage**:
-Goals are stored in Chrome storage, allowing users to access them even after closing the browser.
+2. Storage: Your goals stay safe in Chrome's storage, so you can access them even after closing your browser.
 
-* **Goal Management**:
-Users can delete individual goals by clicking on them. Toggling a goal's completion status is also done by clicking on the goal.
-Alternatively, users can delete all goals at once using the "Delete All" button provided in the interface.
+3. Goal Management: Manage your goals effortlessly with simple controls. Delete goals with a click, or mark them as completed. Completed goals move to a separate section for easy tracking. You can also clear completed goals individually or all at once, giving you control over your goal list.
 
-
-![Screenshot from 2024-05-01 19-59-03](https://github.com/Sanisha15/Daily-Goals-Tracker/assets/90545685/48360e50-c76e-4b74-ab73-22d5b4ae4156)
+![Screenshot from 2024-05-13 23-02-24](https://github.com/Sanisha15/Daily-Goals-Tracker/assets/90545685/738c49ca-a480-4a65-9256-c1169c406de9)
 
 **Working**:
+![Screencast-from-13-05-24-11_23_36-PM-IST](https://github.com/Sanisha15/Daily-Goals-Tracker/assets/90545685/fbd35fa9-3247-4acd-9305-ff29ffa5c356)
 
-![Screencast from 01-05-24 05_53_41 PM IST](https://github.com/Sanisha15/Daily-Goals-Tracker/assets/90545685/d99c72e7-cfaa-46ae-9ed4-32c330570d88)
 
 
 # **Setting Up the Extension Locally for Development**:
