@@ -2,13 +2,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const goalInput = document.getElementById('goalInput');
     const addGoalButton = document.getElementById('addGoal');
     const goalList = document.getElementById('goalList');
-    const deleteAllButton = document.getElementById('deleteAll'); 
+    const deleteAllButton = document.getElementById('deleteAll');
+    const completedGoalsList = document.getElementById('completedGoalsList');
 
     // Load goals from storage
     chrome.storage.sync.get(['goals'], function (result) {
         if (result.goals) {
             result.goals.forEach(goal => {
-                addGoalToList(goal);
+                addGoalToList(goal.text, goal.completed, goal.id); // Pass both text, completion status, and goalId
             });
         }
     });
@@ -17,13 +18,14 @@ document.addEventListener('DOMContentLoaded', function () {
     addGoalButton.addEventListener('click', function () {
         const goalText = goalInput.value.trim();
         if (goalText !== '') {
-            addGoalToList(goalText);
+            const goalId = uuidv4(); // Generate a unique goalId
+            addGoalToList(goalText, false, goalId); // Initialize the goal as incomplete with a unique goalId
             goalInput.value = '';
 
             // Save goals to storage
             chrome.storage.sync.get(['goals'], function (result) {
                 const goals = result.goals || [];
-                goals.push(goalText);
+                goals.push({ id: goalId, text: goalText, completed: false }); // Store both text, completion status, and goalId
                 chrome.storage.sync.set({ goals: goals });
             });
         }
@@ -32,127 +34,129 @@ document.addEventListener('DOMContentLoaded', function () {
     // Add event listener for Delete All button
     deleteAllButton.addEventListener('click', function () {
         removeAllGoals();
-        
-        const existingQuote = document.getElementById('quote');
-        if (existingQuote) {
-            existingQuote.remove();
-        }
     });
 
     // Function to remove all goals
     function removeAllGoals() {
         if (goalList) {
             goalList.innerHTML = ''; // Remove all children (goals)
-            // Remove all goals from storage
-            chrome.storage.sync.remove('goals', function () {
-                console.log('All goals removed.');
-            });
         }
+        if (completedGoalsList) {
+            completedGoalsList.innerHTML = ''; // Remove all completed goals
+        }
+        // Remove all goals from storage
+        chrome.storage.sync.remove('goals');
     }
 
-    // Function to display quote
-    function displayquote() {
-        // Display the quote on the page
-        const quoteElement = document.createElement('p');
-        quoteElement.textContent = "HURRAY! ALL GOALS ARE COMPLETED.";
-        quoteElement.style.fontSize = '15px';
-
-        quoteElement.id = 'quote';
-        document.body.appendChild(quoteElement);
-    }
-
-    // Function to add a goal to the list
-    function addGoalToList(goalText) {
+   // Function to add a goal to the list
+    function addGoalToList(goalText, completed, goalId) {
         // Ensure goalText is a string
         if (typeof goalText !== 'string') {
             console.error('Invalid goal text:', goalText);
             return; // Exit the function if goalText is not a string
         }
 
-        const goalList = document.getElementById('goalList');
+        const goalContainer = completed ? completedGoalsList : goalList; // Determine where to append the goal
 
-        // Remove existing quote if it exists
-        const existingQuote = document.getElementById('quote');
-        if (existingQuote) {
-            existingQuote.remove();
-        }
-
-        // Check if goal list exists
-        if (!goalList) {
-            const newGoalList = document.createElement('ul');
-            newGoalList.id = 'goalList';
-            document.body.appendChild(newGoalList);
+        // Check if goal container exists
+        if (!goalContainer) {
+            console.error('Goal container not found:', completed ? 'completedGoalsList' : 'goalList');
+            return;
         }
 
         const li = document.createElement('li');
         li.textContent = goalText;
 
-        goalList.appendChild(li);
+        // Apply styles to the list item
+        li.style.border = '1px solid #ccc';
+        li.style.padding = '10px';
+        li.style.marginBottom = '10px';
+        li.style.wordWrap = 'break-word'; // Ensure text wraps within the box
 
-        // Toggle completed status when goal is clicked
-        li.addEventListener('click', function () {
-            li.classList.toggle('completed');
-            updateGoalStatus(goalText, li.classList.contains('completed'));
-            
-            // Check if any uncompleted goal exists
-            const uncompletedGoals = Array.from(goalList.childNodes).some(node => !node.classList.contains('completed'));
-            if (uncompletedGoals) {
-                // Remove existing quote if it exists
-                const existingQuote = document.getElementById('quote');
-                if (existingQuote) {
-                    existingQuote.remove();
-                }
-            } else {
-                // Remove existing quote if it exists
-                const existingQuote = document.getElementById('quote');
-                if (existingQuote) {
-                    existingQuote.remove();
-                }
-                displayquote();
-            }
-            
-        });
+        if (completed) {
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.style.marginLeft = '10px';
+            removeButton.addEventListener('click', function () {
+                removeGoalFromStorage(goalId); // Remove the goal from storage when the Remove button is clicked
+                li.remove(); // Remove the goal from the UI
+            });
+            li.appendChild(removeButton);
+        }
+
+        goalContainer.appendChild(li);
+
+        // Toggle completed status when goal is clicked (only for goals in original list)
+        if (!completed) {
+            li.addEventListener('click', function () {
+                li.classList.toggle('completed');
+                updateGoalStatus(goalId, li.classList.contains('completed'));
+            });
+        }
     }
 
+
     // Function to update goal status in storage
-    function updateGoalStatus(goalText, completed) {
+    function updateGoalStatus(goalId, completed) {
         chrome.storage.sync.get(['goals'], function (result) {
             const goals = result.goals || [];
-            const index = goals.indexOf(goalText);
+            const index = goals.findIndex(goal => goal.id === goalId);
             if (index !== -1) {
-                goals[index] = { text: goalText, completed: completed };
+                // Update goal status in storage
+                goals[index].completed = completed;
                 chrome.storage.sync.set({ goals: goals });
             }
         });
     }
-// Button functionality to change color on hover and on click
-function setupButton(button) {
-    button.addEventListener('mouseover', function () {
-        // Change button color on hover
-        button.style.backgroundColor = ' #b373f8';
-    });
 
-    button.addEventListener('mouseout', function () {
-        // Revert button color on mouseout
-        button.style.backgroundColor = ' #842ae5'; // Revert to original color
-    });
+    // Function to remove a goal from storage
+    function removeGoalFromStorage(goalId) {
+        chrome.storage.sync.get(['goals'], function (result) {
+            let goals = result.goals || [];
+            goals = goals.filter(goal => goal.id !== goalId); // Filter out the goal with the given goalId
+            chrome.storage.sync.set({ goals: goals });
+        });
+    }
 
-    button.addEventListener('click', function () {
-        // Change button color on click
-        button.style.backgroundColor = '#ffac09';
+    // UUID generator function
+    function uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0,
+                v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
 
-        // Revert button color after a brief period
-        setTimeout(() => {
-            button.style.backgroundColor = ' #842ae5'; // Revert to original color
-        }, 300); 
+    // Set up button functionality for addGoalButton
+    setupButton(addGoalButton);
+
+    // Set up button functionality for deleteAllButton
+    setupButton(deleteAllButton);
+});
+
+// Function to add "Delete All" button for completed goals
+function addDeleteAllButton() {
+    const deleteAllButton = document.createElement('button');
+    deleteAllButton.textContent = 'Delete All';
+    deleteAllButton.addEventListener('click', function () {
+        removeAllCompletedGoals();
     });
+    completedGoalsList.prepend(deleteAllButton);
 }
 
-// Set up button functionality for addGoalButton
-setupButton(addGoalButton);
+// Function to remove all completed goals from storage and UI
+function removeAllCompletedGoals() {
+    if (completedGoalsList) {
+        completedGoalsList.innerHTML = ''; // Remove all completed goals from UI
 
-// Set up button functionality for deleteAllButton
-setupButton(deleteAllButton);
+        // Remove all completed goals from storage
+        chrome.storage.sync.get(['goals'], function (result) {
+            let goals = result.goals || [];
+            goals = goals.filter(goal => !goal.completed); // Filter out completed goals
+            chrome.storage.sync.set({ goals: goals });
+        });
+    }
+}
 
-
-});
+// Call the function to add "Delete All" button for completed goals
+addDeleteAllButton();
